@@ -1,0 +1,17 @@
+{% set pageInfo = {
+    'page': 'example',
+    'title': 'Template Loader',
+    'description': 'Example Dynamic Loaded Page',
+    'og': {
+       'url': 'loader/example/',
+       'title': 'Example Dynamic Loaded Page',
+       'image': 'code.jpg',
+       'image_alt': 'Loader Code',
+    }
+%}
+{{ include('header.twig') }}
+   <div class="midbody">
+
+
+   </div>
+{{ include('footer.twig') }}

@@ -1,0 +1,15 @@
+
+   <br><br style="clear: both"><br>
+   <div class="footer">
+{% if errors is not null %}
+    <div class="error-bubble">
+     <div class="error-title">PHP ERRORS</div>
+    {% for error in errors %}
+     <div class="error-line">{{ error }}</div>
+    {% endfor %}
+    </div>
+{% endif %}
+   </div>
+  </div>
+ </body>
+</html>

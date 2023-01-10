@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+ <head>
+  <meta charset="utf-8">
+  <meta name="description" content="{{ pageInfo.description }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+{% if pageInfo.og is defined %}
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="628">
+  <meta property="og:image" content="{{ config.protocol }}://{{ config.domain }}/images/og/{{ pageInfo.og.image }}">
+  <meta property="og:image:secure_url" content="{{ config.protocol }}://{{ config.domain }}/images/og/{{ pageInfo.og.image }}">
+  <meta property="og:image:alt" content="{{ pageInfo.og.image_alt }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ pageInfo.og.title }}">
+  <meta property="og:description" content="{{ pageInfo.description }}">
+  <meta property="og:site_name" content="{{ config.website_name }}">
+  <meta property="og:url" content="{{ config.protocol }}://{{ config.domain }}/{{ pageInfo.og.url }}">
+{% else %}
+  <meta name="robots" content="noindex,nofollow">
+{% endif %}
+  <title>{{ pageInfo.title }} &middot; {{ config.website_name }}</title>
+  <link rel="icon" href="{{ config.protocol }}://{{ config.domain }}/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="{{ config.protocol }}://{{ config.domain }}/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="{{ config.protocol }}://{{ config.domain }}/images/favicon.png" type="image/png">
+  <link rel="preload" as="font" type="font/woff2" href="{{ config.protocol }}://{{ config.domain }}/css/fonts/tabler-icons.woff2?v=1.101.0d" crossOrigin="anonymous">
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="//fonts.googleapis.com/css?family=Archivo+Narrow|Lato|Roboto|Open+Sans&display=swap">
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" type="text/css" href="//fonts.googleapis.com/icon?family=Material+Icons&display=swap">
+  <link rel="preload" as="script" href="{{ config.protocol }}://{{ config.domain }}/js/jquery.js?v=3.6.0">
+  <noscript>
+   <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Archivo+Narrow|Lato|Roboto|Open+Sans&display=swap">
+   <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/icon?family=Material+Icons&display=swap">
+  </noscript>
+  <link rel="stylesheet" href="{{ config.protocol }}://{{ config.domain }}/css/responsive.css?v=1.0.0" type="text/css">
+  <script src="{{ config.protocol }}://{{ config.domain }}/js/jquery.js?v=3.6.0"></script>
+ </head>
+ <body lang="en">
+  <div class="container">
+   <div class="header">
+
+   </div>
+
