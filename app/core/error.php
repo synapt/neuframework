@@ -172,8 +172,8 @@ class error {
         $twig->addExtension(new IntlExtension());
 
         try {
-            $twig->display('errors/fatal.twig', [
-                'domain' => config::getSetting('domain'),
+            $twig->display('_internal/errors/fatal.twig', [
+                'config' => ['protocol' => config::getSetting('protocol'), 'domain' => config::getSetting('domain')],
                 'errors' => self::getErrors()
             ]);
         }
