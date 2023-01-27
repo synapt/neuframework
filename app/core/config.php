@@ -41,6 +41,65 @@ class config {
     }
     
     /**
+     * config::caseSensitiveCheck()
+     *
+     * Check if a config key will be lower case and do so if set
+     *
+     * @access      private
+     *
+     * @param       array          $options            The array of options
+     * @param       string         $key                The array item key name
+     *
+     * @return      string
+     */
+    private static function caseSensitiveCheck(array $options, string $key): string {
+        if (array_key_exists('lowercase_keys', $options) === false || (array_key_exists('lowercase_keys', $options) === true && $options['lowercase_keys'] === true)) {
+            $key = strtolower($key);
+        }
+        return $key;
+    }
+    
+    /**
+     * config::literalTypesCheck()
+     *
+     * Check if values should be converted to a literal type and do so if set
+     * Be sure of values!  "1" and "0" for example would type convert as true/false.
+     *
+     * @access      private
+     *
+     * @param       array          $options            The array of options
+     * @param       string         $value              The key item's value
+     *
+     * @return      string
+     */
+    private static function literalTypesCheck(array $options, string $value): mixed {
+        if (array_key_exists('literal_types', $options) === false || (array_key_exists('literal_types', $options) === true && $options['literal_types'] === true)) {
+            // Null checks
+            if ($value === 'null' || $value === '') {
+                return null;
+            }
+            
+            // Boolean check
+            if (($boolean = filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE)) !== null) {
+                return $boolean;
+            }
+            
+            // Integer check
+            if (ctype_digit($value) === true) {
+                return (int)$value;
+            }
+            
+            // Float check
+            if (($float = filter_var($value, FILTER_VALIDATE_FLOAT, ['options' => ['decimal' => '.'], 'flags' => FILTER_NULL_ON_FAILURE])) !== null) {
+                return $float;
+            }
+        }
+
+        // And otherwise just return the original string as-is a string
+        return $value;
+    }
+    
+    /**
      * config::dotEnvLoader()
      *
      * Load config variables from a .env file variables
@@ -56,7 +115,8 @@ class config {
          *  directory: A string value of the exact directory to look in
          *  filename: A string value of the config filename to look for
          *  required: An array value of required/expected configuration values
-         *  lowercase_keys: boolean, true to strtolower() all key names (default)
+         *  lowercase_keys: boolean, true to preserve any original naming (default), false to strtolower() all key names
+         *  literal_types: boolean, true to convert config values to equivalent literal types
          *  multidimensional: boolean, true to convert dot notated strings to a multidimensional array
          */
         
@@ -84,11 +144,10 @@ class config {
         
         // Now run through all the options and apply them into our local settings array
         foreach ($dotenv as $key => $value) {
-            if (array_key_exists('lowercase_keys', $options) === false || (array_key_exists('lowercase_keys', $options) === true && $options['lowercase_keys'] === true)) {
-                $key = strtolower($key);
-            }
+            $key = self::caseSensitiveCheck($options, $key);
+            $value = self::literalTypesCheck($options, $value);
             
-            // phpdotenv doesn't support a multidimensional perspective, so we can do some trickery here
+            // phpdotenv doesn't support array configuration, so we can do some manual trickery here
             if (array_key_exists('multidimensional', $options) === true && $options['multidimensional'] === true && str_contains($key, '.') === true) {
                 $data = new DotAccessData\Data;
                 $data->set($key, $value);
@@ -117,7 +176,8 @@ class config {
          *  directory: A string value of the exact directory to look in
          *  filename: A string value of the config filename to look for
          *  required: An array value of required/expected configuration values
-         *  lowercase_keys: boolean, true to strtolower() all key names (default)
+         *  literal_types: boolean, true to convert config values to equivalent literal types
+         *  lowercase_keys: boolean, true to preserve any original naming (default), false to strtolower() all key names
          */
         
         // If a directory was provided use it, otherwise default to /app directory (DIRECTORY_ROOT . '/app')
@@ -143,9 +203,9 @@ class config {
         }
         
         foreach ($json as $key => $value) {
-            if (array_key_exists('lowercase_keys', $options) === false || (array_key_exists('lowercase_keys', $options) === true && $options['lowercase_keys'] === true)) {
-                $key = strtolower($key);
-            }
+            $key = self::caseSensitiveCheck($options, $key);
+            $value = self::literalTypesCheck($options, $value);
+            
             self::$settings[$key] = $value;
         }
         
@@ -169,7 +229,8 @@ class config {
     private static function envLoader(array $options): void {
         /*  Available $options keys and values;
          *  required: An array of explicit config/env names to require/fetch for
-         *  lowercase_keys: boolean, true to strtolower() all key names (default)
+         *  lowercase_keys: boolean, true to preserve any original naming, false to strtolower() all key names (default)
+         *  literal_types: boolean, true to convert config values to equivalent literal types
          */
         
         /*  This is ultimately the least recommended model of loading, getenv() is not exactly
@@ -181,9 +242,10 @@ class config {
             // Design assumes everything is /prefixed/ with CONFIG_ just to avoid normal env variables
             if (str_starts_with($key, 'CONFIG_',) === true) {
                 $key = str_replace('CONFIG_', '', $key);
-                if (array_key_exists('lowercase_keys', $options) === false || (array_key_exists('lowercase_keys', $options) === true && $options['lowercase_keys'] === true)) {
-                    $key = strtolower($key);
-                }
+                
+                $key = self::caseSensitiveCheck($options, $key);
+                $value = self::literalTypesCheck($options, $value);
+                
                 self::$settings[$key] = $value;
             }
         }
@@ -214,9 +276,6 @@ class config {
             
             // Protocol (http, https, etc)
             'protocol' => 'https',
-            
-            // Default session name
-            'session_name' => 'neusession',
             
             // Log files location (prevent access via httpd if in app)
             'logs_directory' => $_SERVER['DOCUMENT_ROOT'] . '/app/logs/',
@@ -256,6 +315,13 @@ class config {
      * @return      mixed          Value of the setting if it exists, else NULL
      */
     public static function getSetting(string $key): mixed {
+        // Check if we're in a multidimensional setting
+        if (str_contains($key, '.') === true) {
+            return array_reduce(explode('.', $key), static function($settings, $item) {
+                return $settings[$item];
+            }, self::$settings);
+        }
+        
         if (isset(self::$settings[$key]) === true) {
             return self::$settings[$key];
         }
@@ -288,7 +354,15 @@ class config {
      * @return      void
      */
     public static function setSetting(string $key, mixed $value): void {
-        self::$settings[$key] = $value;
+        // See if we want to set an item in multidimensional context
+        if (str_contains($key, '.') === true) {
+            $data = new DotAccessData\Data;
+            $data->set($key, $value);
+            self::$settings = array_merge_recursive(self::$settings, $data->export());
+        }
+        else {
+            self::$settings[$key] = $value;
+        }
     }
     
     /**
